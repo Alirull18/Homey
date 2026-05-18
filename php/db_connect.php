@@ -1,7 +1,4 @@
 <?php
-/**
- * Database Connection Script (Procedural style matching CSC264 standards)
- */
 
 define('DB_HOST', '127.0.0.1');
 define('DB_USER', 'root');
