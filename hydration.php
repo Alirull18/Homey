@@ -145,16 +145,15 @@ $active_page = 'hydration';
                   $filled = $i < $cupsCount;
                   $val_to_set = $filled ? $i : $i + 1; // Toggle behavior
                 ?>
-                  <div class="cup <?php echo $filled ? 'filled' : ''; ?>" onclick="submitCups(<?php echo $val_to_set; ?>)" style="cursor:pointer; border:2px solid var(--b200); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:20px"><?php echo $filled ? '🍺' : '🥤'; ?></div>
-                    <div style="font-size:11px; font-weight:700; color:var(--gray500)"><?php echo $i + 1; ?></div>
+                  <div class="cup <?php echo $filled ? 'filled' : ''; ?>" onclick="submitCups(<?php echo $val_to_set; ?>)" style="cursor:pointer; border:2px solid <?php echo $filled ? 'var(--b400)' : 'var(--gray200)'; ?>; background: <?php echo $filled ? 'var(--b50)' : 'var(--gray50)'; ?>; border-radius:8px; padding:12px; text-align:center; font-weight:700; color:<?php echo $filled ? 'var(--b600)' : 'var(--gray500)'; ?>; display:flex; justify-content:center; align-items:center; font-size:15px;">
+                    <?php echo $i + 1; ?>
                   </div>
                 <?php endfor; ?>
               </div>
 
               <!-- // PAPARAN MAKLUM BALAS SASARAN PENGGUNA -->
               <?php if ($cupsCount >= 10): ?>
-                <div class="alert alert-b">🎉 Daily goal reached! Great hydration today.</div>
+                <div class="alert alert-b">Daily goal reached! Great hydration today.</div>
               <?php else: ?>
                 <div class="alert alert-b">Keep going! You need <?php echo (10 - $cupsCount) * 250; ?> ml more to reach your daily 2.5L goal.</div>
               <?php endif; ?>

@@ -10,9 +10,9 @@ if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
 }
 
-// Compatibility layer for both variables
+
 $dbc = $conn;
 
-// Set charset for proper character rendering (e.g. emojis/special chars)
+
 mysqli_set_charset($conn, "utf8mb4");
 ?>

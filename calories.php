@@ -147,52 +147,43 @@ $active_page = 'calories';
             </div>
           <?php endif; ?>
 
-          <div class="g2" style="margin-bottom:16px">
-            <!-- // RINGKASAN HARI INI -->
-            <div class="card">
-              <div class="card-title">Daily calorie summary</div>
-              <div class="g3" style="margin-bottom:12px">
-                <div><div class="metric-lbl">Consumed</div><div class="metric-val" style="font-size:20px"><?php echo $totalKcal; ?> <small>kcal</small></div></div>
-                <div><div class="metric-lbl">Daily Target</div><div class="metric-val" style="font-size:20px; color:var(--g600)"><?php echo $targetKcal; ?> <small>kcal</small></div></div>
-                <div><div class="metric-lbl">Remaining</div><div class="metric-val" style="font-size:20px; color:var(--b600)"><?php echo $remKcal; ?> <small>kcal</small></div></div>
-              </div>
-              
-              <div class="bar-wrap" style="height:12px; margin-bottom:16px"><div class="bar bar-g" style="width:<?php echo $kcalPct; ?>%"></div></div>
+          <!-- // RINGKASAN HARI INI -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">
+              <span>Daily calorie summary</span>
+              <a href="recipes.php" class="btn btn-primary btn-sm" style="text-decoration:none; font-weight:700">Browse Recipes</a>
+            </div>
+            <div class="g3" style="margin-bottom:12px">
+              <div><div class="metric-lbl">Consumed</div><div class="metric-val" style="font-size:20px"><?php echo $totalKcal; ?> <small>kcal</small></div></div>
+              <div><div class="metric-lbl">Daily Target</div><div class="metric-val" style="font-size:20px; color:var(--g600)"><?php echo $targetKcal; ?> <small>kcal</small></div></div>
+              <div><div class="metric-lbl">Remaining</div><div class="metric-val" style="font-size:20px; color:var(--b600)"><?php echo $remKcal; ?> <small>kcal</small></div></div>
+            </div>
+            
+            <div class="bar-wrap" style="height:12px; margin-bottom:16px"><div class="bar bar-g" style="width:<?php echo $kcalPct; ?>%"></div></div>
 
-              <!-- // PROGRESS BAR UNTUK MAKRONUTRISI -->
-              <div class="macro-row" style="margin-bottom:10px">
-                <div class="macro-head" style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px">
-                  <span class="macro-name" style="color:var(--b600)">Protein (P)</span>
-                  <span class="macro-val"><?php echo $totP; ?>g / <?php echo $targetP; ?>g</span>
-                </div>
-                <div class="bar-wrap" style="height:8px"><div class="bar bar-b" style="width:<?php echo $pctP; ?>%"></div></div>
+            <!-- // PROGRESS BAR UNTUK MAKRONUTRISI -->
+            <div class="macro-row" style="margin-bottom:10px">
+              <div class="macro-head" style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px">
+                <span class="macro-name" style="color:var(--b600)">Protein (P)</span>
+                <span class="macro-val"><?php echo $totP; ?>g / <?php echo $targetP; ?>g</span>
               </div>
-
-              <div class="macro-row" style="margin-bottom:10px">
-                <div class="macro-head" style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px">
-                  <span class="macro-name" style="color:var(--a600)">Carbohydrates (C)</span>
-                  <span class="macro-val"><?php echo $totC; ?>g / <?php echo $targetC; ?>g</span>
-                </div>
-                <div class="bar-wrap" style="height:8px"><div class="bar bar-a" style="width:<?php echo $pctC; ?>%"></div></div>
-              </div>
-
-              <div class="macro-row" style="margin-bottom:10px">
-                <div class="macro-head" style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px">
-                  <span class="macro-name" style="color:var(--r500)">Fat (F)</span>
-                  <span class="macro-val"><?php echo $totF; ?>g / <?php echo $targetF; ?>g</span>
-                </div>
-                <div class="bar-wrap" style="height:8px"><div class="bar bar-r" style="width:<?php echo $pctF; ?>%"></div></div>
-              </div>
+              <div class="bar-wrap" style="height:8px"><div class="bar bar-b" style="width:<?php echo $pctP; ?>%"></div></div>
             </div>
 
-            <!-- // PENJELASAN INTEGRASI RESIPI UNTUK LOG KALORI -->
-            <div class="card" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:30px 20px; border:2px dashed var(--g200); background:var(--g50)">
-              <div style="font-size:36px; margin-bottom:10px">🍳</div>
-              <div class="card-title" style="margin-bottom:6px; color:var(--g800)">Recipe-Powered Tracker</div>
-              <p style="font-size:12.5px; color:var(--gray600); line-height:1.6; margin-bottom:14px">
-                To guarantee healthy and precise nutritional calculations, custom manually typed foods are retired. You can log meals instantly directly from our community recipe library catalog!
-              </p>
-              <a href="recipes.php" class="btn btn-primary" style="text-decoration:none; padding:8px 20px; font-weight:700">Browse Approved Recipes</a>
+            <div class="macro-row" style="margin-bottom:10px">
+              <div class="macro-head" style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px">
+                <span class="macro-name" style="color:var(--a600)">Carbohydrates (C)</span>
+                <span class="macro-val"><?php echo $totC; ?>g / <?php echo $targetC; ?>g</span>
+              </div>
+              <div class="bar-wrap" style="height:8px"><div class="bar bar-a" style="width:<?php echo $pctC; ?>%"></div></div>
+            </div>
+
+            <div class="macro-row" style="margin-bottom:10px">
+              <div class="macro-head" style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px">
+                <span class="macro-name" style="color:var(--r500)">Fat (F)</span>
+                <span class="macro-val"><?php echo $totF; ?>g / <?php echo $targetF; ?>g</span>
+              </div>
+              <div class="bar-wrap" style="height:8px"><div class="bar bar-r" style="width:<?php echo $pctF; ?>%"></div></div>
             </div>
           </div>
 

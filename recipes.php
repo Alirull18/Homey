@@ -154,7 +154,7 @@ $active_page = 'recipes';
               <p style="margin:0; font-size:13.5px; color:var(--gray400)">Try searching for another keyword or check back later!</p>
             </div>
           <?php else: ?>
-            <div class="recipe-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px">
+            <div class="recipe-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; align-items: start">
               <?php foreach ($recipes as $r): ?>
                 <div class="rcard" style="background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); display:flex; flex-direction:column; overflow:hidden">
                   <div class="rcard-body" style="padding:15px; display:flex; flex-direction:column; flex:1">

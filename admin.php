@@ -11,8 +11,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
 $user_id = $_SESSION['user_id'];
 $full_name = $_SESSION['full_name'];
 
-$success_msg = '';
-$error_msg = '';
+$success_msg = isset($_GET['success']) ? $_GET['success'] : '';
+$error_msg = isset($_GET['error']) ? $_GET['error'] : '';
 
 // // Uruskan semua data pengurusan admin via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -49,9 +49,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          VALUES ('$name', '$category', $kcal, $p, $c, $f)";
             
             if (mysqli_query($conn, $q_insert)) {
-                $success_msg = "New ingredient successfully added to central database!";
+                header("Location: admin.php?tab=ingredients&success=" . urlencode("New ingredient successfully added to central database!"));
+                exit;
             } else {
                 $error_msg = "Failed to insert ingredient: " . mysqli_error($conn);
+            }
+        }
+    } elseif ($action === 'update_ingredient') {
+        $ingredient_id = (int)$_POST['ingredient_id'];
+        $name = trim($_POST['name'] ?? '');
+        $category = $_POST['category'] ?? 'Other';
+        $kcal = (int)($_POST['kcal'] ?? 100);
+        $p = (float)($_POST['protein'] ?? 0);
+        $c = (float)($_POST['carbs'] ?? 0);
+        $f = (float)($_POST['fat'] ?? 0);
+
+        if (empty($name)) {
+            $error_msg = "Ingredient name cannot be empty.";
+        } else {
+            $q_update = "UPDATE ingredients SET 
+                         name = '$name', 
+                         category = '$category', 
+                         kcal_per_100g = $kcal, 
+                         protein_g = $p, 
+                         carbs_g = $c, 
+                         fat_g = $f 
+                         WHERE ingredient_id = $ingredient_id";
+            
+            if (mysqli_query($conn, $q_update)) {
+                header("Location: admin.php?tab=ingredients&success=" . urlencode("Ingredient updated successfully!"));
+                exit;
+            } else {
+                $error_msg = "Failed to update ingredient: " . mysqli_error($conn);
             }
         }
     } elseif ($action === 'delete_ingredient') {
@@ -59,7 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $q_delete = "DELETE FROM ingredients WHERE ingredient_id = $ingredient_id";
         
         if (mysqli_query($conn, $q_delete)) {
-            $success_msg = "Ingredient removed from central database.";
+            header("Location: admin.php?tab=ingredients&success=" . urlencode("Ingredient removed from central database."));
+            exit;
         } else {
             $error_msg = "Failed to delete ingredient: " . mysqli_error($conn);
         }
@@ -322,45 +352,78 @@ $active_page = 'admin';
               ?>
             </div>
 
-          <?php elseif ($tab === 'ingredients'): ?>
+          <?php elseif ($tab === 'ingredients'): 
+            $edit_id = isset($_GET['edit']) ? (int)$_GET['edit'] : 0;
+            $edit_name = '';
+            $edit_category = 'Other';
+            $edit_kcal = '';
+            $edit_protein = '';
+            $edit_carbs = '';
+            $edit_fat = '';
+            $is_editing = false;
+
+            if ($edit_id > 0) {
+                $q_edit = "SELECT * FROM ingredients WHERE ingredient_id = $edit_id";
+                $res_edit = mysqli_query($conn, $q_edit);
+                if ($res_edit && mysqli_num_rows($res_edit) > 0) {
+                    $row_e = mysqli_fetch_array($res_edit);
+                    $edit_name = $row_e['name'];
+                    $edit_category = $row_e['category'];
+                    $edit_kcal = $row_e['kcal_per_100g'];
+                    $edit_protein = $row_e['protein_g'];
+                    $edit_carbs = $row_e['carbs_g'];
+                    $edit_fat = $row_e['fat_g'];
+                    $is_editing = true;
+                    mysqli_free_result($res_edit);
+                }
+            }
+          ?>
             <!-- // TAB 3: INGREDIENT DATABASE -->
             <div class="g2">
               <div class="card">
-                <div class="card-title">Add standard ingredient</div>
+                <div class="card-title"><?php echo $is_editing ? 'Edit standard ingredient' : 'Add standard ingredient'; ?></div>
                 
                 <form method="POST" action="admin.php?tab=ingredients">
-                  <input type="hidden" name="action" value="add_ingredient">
+                  <input type="hidden" name="action" value="<?php echo $is_editing ? 'update_ingredient' : 'add_ingredient'; ?>">
+                  <?php if ($is_editing): ?>
+                    <input type="hidden" name="ingredient_id" value="<?php echo $edit_id; ?>">
+                  <?php endif; ?>
                   
                   <div class="form-group" style="margin-bottom:10px">
                     <label class="form-label">Ingredient name</label>
-                    <input name="name" class="form-input" placeholder="e.g. Avocado, White Rice, Whey Protein" required>
+                    <input name="name" class="form-input" placeholder="e.g. Avocado, White Rice, Whey Protein" value="<?php echo htmlspecialchars($edit_name); ?>" required>
                   </div>
                   
                   <div class="form-grid" style="margin-bottom:10px">
                     <div class="form-group">
                       <label class="form-label">Category</label>
                       <select name="category" class="form-input form-select">
-                        <option value="Meat & Poultry">Meat & Poultry</option>
-                        <option value="Vegetables">Vegetables</option>
-                        <option value="Grains">Grains</option>
-                        <option value="Dairy & Eggs">Dairy & Eggs</option>
-                        <option value="Legumes">Legumes</option>
-                        <option value="Other">Other</option>
+                        <option value="Meat & Poultry" <?php echo $edit_category === 'Meat & Poultry' ? 'selected' : ''; ?>>Meat & Poultry</option>
+                        <option value="Vegetables" <?php echo $edit_category === 'Vegetables' ? 'selected' : ''; ?>>Vegetables</option>
+                        <option value="Grains" <?php echo $edit_category === 'Grains' ? 'selected' : ''; ?>>Grains</option>
+                        <option value="Dairy & Eggs" <?php echo $edit_category === 'Dairy & Eggs' ? 'selected' : ''; ?>>Dairy & Eggs</option>
+                        <option value="Legumes" <?php echo $edit_category === 'Legumes' ? 'selected' : ''; ?>>Legumes</option>
+                        <option value="Other" <?php echo $edit_category === 'Other' ? 'selected' : ''; ?>>Other</option>
                       </select>
                     </div>
                     <div class="form-group">
                       <label class="form-label">kcal / 100g</label>
-                      <input name="kcal" class="form-input" type="number" placeholder="e.g. 160" required min="1">
+                      <input name="kcal" class="form-input" type="number" placeholder="e.g. 160" value="<?php echo htmlspecialchars($edit_kcal); ?>" required min="1">
                     </div>
                   </div>
 
                   <div class="form-grid" style="margin-bottom:12px">
-                    <div class="form-group"><label class="form-label">Protein (g)</label><input name="protein" class="form-input" type="number" step="0.1" placeholder="0"></div>
-                    <div class="form-group"><label class="form-label">Carbs (g)</label><input name="carbs" class="form-input" type="number" step="0.1" placeholder="0"></div>
-                    <div class="form-group"><label class="form-label">Fat (g)</label><input name="fat" class="form-input" type="number" step="0.1" placeholder="0"></div>
+                    <div class="form-group"><label class="form-label">Protein (g)</label><input name="protein" class="form-input" type="number" step="0.1" placeholder="0" value="<?php echo htmlspecialchars($edit_protein); ?>"></div>
+                    <div class="form-group"><label class="form-label">Carbs (g)</label><input name="carbs" class="form-input" type="number" step="0.1" placeholder="0" value="<?php echo htmlspecialchars($edit_carbs); ?>"></div>
+                    <div class="form-group"><label class="form-label">Fat (g)</label><input name="fat" class="form-input" type="number" step="0.1" placeholder="0" value="<?php echo htmlspecialchars($edit_fat); ?>"></div>
                   </div>
 
-                  <button type="submit" class="btn btn-primary btn-full">Insert ingredient</button>
+                  <div style="display:flex; gap:8px">
+                    <button type="submit" class="btn btn-primary btn-full" style="flex:1"><?php echo $is_editing ? 'Update ingredient' : 'Insert ingredient'; ?></button>
+                    <?php if ($is_editing): ?>
+                      <a href="admin.php?tab=ingredients" class="btn btn-secondary" style="text-decoration:none">Cancel</a>
+                    <?php endif; ?>
+                  </div>
                 </form>
               </div>
 
@@ -385,11 +448,14 @@ $active_page = 'admin';
                             <td><strong><?php echo $ing['kcal_per_100g']; ?></strong></td>
                             <td style="font-size:11px">P:<?php echo $ing['protein_g']; ?> C:<?php echo $ing['carbs_g']; ?> F:<?php echo $ing['fat_g']; ?></td>
                             <td>
-                              <form method="POST" action="admin.php?tab=ingredients" onsubmit="return confirm('Remove this ingredient permanently?')">
-                                <input type="hidden" name="action" value="delete_ingredient">
-                                <input type="hidden" name="ingredient_id" value="<?php echo $ing['ingredient_id']; ?>">
-                                <button type="submit" class="abtn abtn-r" style="border:none; background:none; cursor:pointer">✕</button>
-                              </form>
+                              <div style="display:flex; gap:4px; align-items:center">
+                                <a href="admin.php?tab=ingredients&edit=<?php echo $ing['ingredient_id']; ?>" class="abtn abtn-b" style="text-decoration:none">Edit</a>
+                                <form method="POST" action="admin.php?tab=ingredients" onsubmit="return confirm('Remove this ingredient permanently?')" style="margin:0">
+                                  <input type="hidden" name="action" value="delete_ingredient">
+                                  <input type="hidden" name="ingredient_id" value="<?php echo $ing['ingredient_id']; ?>">
+                                  <button type="submit" class="abtn abtn-r" style="border:none; background:none; cursor:pointer">✕</button>
+                                </form>
+                              </div>
                             </td>
                           </tr>
                         <?php endwhile; ?>
@@ -427,7 +493,6 @@ $active_page = 'admin';
                         <td>
                           <!-- Butang simulasi bagi portal admin -->
                           <div class="a-btns">
-                            <button class="abtn abtn-b" onclick="alert('Viewing health logs for member: <?php echo htmlspecialchars($u['full_name']); ?> (Simulated)')">View Logs</button>
                             <button class="abtn abtn-r" onclick="alert('User accounts are securely maintained. Suspend action is simulated successfully for <?php echo htmlspecialchars($u['full_name']); ?>.')">Suspend</button>
                           </div>
                         </td>

@@ -258,9 +258,9 @@ $active_page = 'share';
                 </div>
               </div>
 
-              <!-- // BAHAGIAN PENGIRA BAHAN MENTAH RESIPI (OPSI B) -->
+              <!-- // BAHAGIAN PENGIRA BAHAN MENTAH RESIPI  -->
               <div style="background:var(--gray50); border:1px dashed var(--g200); padding:14px; border-radius:var(--radius); margin-bottom:16px">
-                <div style="font-size:13px; font-weight:700; color:var(--g800); margin-bottom:4px">🍎 Recipe Ingredient Calculator</div>
+                <div style="font-size:13px; font-weight:700; color:var(--g800); margin-bottom:4px">Recipe Ingredient Calculator</div>
                 <div style="font-size:11.5px; color:var(--gray500); margin-bottom:12px">Search standard ingredients to automatically compute total calories and nutrients.</div>
                 
                 <div class="form-grid" style="margin-bottom:8px">
@@ -271,7 +271,6 @@ $active_page = 'share';
                   <div class="form-group">
                     <label class="form-label">Select Ingredient</label>
                     <select id="ing-select" class="form-input form-select">
-                      <!-- Populated via script -->
                     </select>
                   </div>
                 </div>
@@ -304,7 +303,7 @@ $active_page = 'share';
 
                 <!-- // Ringkasan jumlah makronutrisi semasa -->
                 <div id="recipe-macros-summary" style="display:none; background:var(--white); border-radius:var(--radius-sm); border:1px solid var(--gray200); padding:10px; margin-top:10px; font-size:12px; color:var(--gray700)">
-                  📊 <strong>Calculated Nutrients:</strong> <span id="sum-kcal" style="font-weight:700; color:var(--g700)">0</span> kcal &middot; 
+                  <strong>Calculated Nutrients:</strong> <span id="sum-kcal" style="font-weight:700; color:var(--g700)">0</span> kcal &middot; 
                   P: <span id="sum-p" style="font-weight:700">0</span>g &middot; 
                   C: <span id="sum-c" style="font-weight:700">0</span>g &middot; 
                   F: <span id="sum-f" style="font-weight:700">0</span>g
@@ -322,7 +321,7 @@ $active_page = 'share';
               </div>
               
               <div class="alert alert-a" style="margin-bottom:16px">
-                ⚠️ <strong>Note:</strong> In compliance with security standards, your submission will be routed to a moderation queue for administrator review before appearing publicly.
+                <strong>Note:</strong> In compliance with security standards, your submission will be routed to a moderation queue for administrator review before appearing publicly.
               </div>
               
               <button type="submit" class="btn btn-primary btn-full">Submit recipe for admin review</button>

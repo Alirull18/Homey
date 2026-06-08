@@ -85,6 +85,64 @@ $waterLiters = $cupsCount * 0.25;
 $waterPct = round(($cupsCount / 10) * 100);
 if ($waterPct > 100) $waterPct = 100;
 
+
+$suggested_recipes = [];
+if ($is_new_user) {
+    // Fallback if user profile isn't configured
+    $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
+                  FROM recipes r 
+                  JOIN users u ON r.author_id = u.user_id 
+                  WHERE r.status = 'Approved' 
+                  ORDER BY r.created_at DESC LIMIT 3";
+} else {
+    if ($goal_type === 'Deficit') {
+        // Recommend lower calorie meals for weight loss
+        $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
+                      FROM recipes r 
+                      JOIN users u ON r.author_id = u.user_id 
+                      WHERE r.status = 'Approved' AND r.calories < 400 
+                      ORDER BY r.calories ASC LIMIT 3";
+    } elseif ($goal_type === 'Surplus') {
+        // Recommend higher calorie meals for weight gain
+        $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
+                      FROM recipes r 
+                      JOIN users u ON r.author_id = u.user_id 
+                      WHERE r.status = 'Approved' AND r.calories >= 550 
+                      ORDER BY r.calories DESC LIMIT 3";
+    } else {
+        // Maintain: Recommend moderate calorie meals
+        $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
+                      FROM recipes r 
+                      JOIN users u ON r.author_id = u.user_id 
+                      WHERE r.status = 'Approved' AND r.calories BETWEEN 400 AND 549 
+                      ORDER BY r.created_at DESC LIMIT 3";
+    }
+}
+
+$res_suggest = mysqli_query($conn, $q_suggest);
+if ($res_suggest) {
+    while ($row = mysqli_fetch_array($res_suggest)) {
+        $suggested_recipes[] = $row;
+    }
+    mysqli_free_result($res_suggest);
+}
+
+// Fallback if no recipes match the strict calorie filter
+if (count($suggested_recipes) === 0) {
+    $q_fallback = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
+                   FROM recipes r 
+                   JOIN users u ON r.author_id = u.user_id 
+                   WHERE r.status = 'Approved' 
+                   ORDER BY r.created_at DESC LIMIT 3";
+    $res_fallback = mysqli_query($conn, $q_fallback);
+    if ($res_fallback) {
+        while ($row = mysqli_fetch_array($res_fallback)) {
+            $suggested_recipes[] = $row;
+        }
+        mysqli_free_result($res_fallback);
+    }
+}
+
 // // Set menu aktif untuk paparan di sidebar
 $active_page = 'dashboard';
 ?>
@@ -179,6 +237,35 @@ $active_page = 'dashboard';
                 <?php endforeach; ?>
               <?php endif; ?>
               <a href="calories.php" class="btn btn-secondary btn-full" style="margin-top:4px; text-align:center; text-decoration:none; font-weight:700">+ Go to calorie tracker</a>
+            </div>
+          </div>
+
+          <!-- // MAKANAN DICADANGKAN (FOOD SUGGESTION) -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">
+              <span>Suggested Meals for You</span>
+              <span style="font-size:11.5px; font-weight:normal; color:var(--gray500)">Tailored for your <?php echo htmlspecialchars($goal_type_display); ?> goal</span>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px">
+              <?php if (count($suggested_recipes) === 0): ?>
+                <p style="color:var(--gray400); font-size:13px; padding:10px 0; margin:0">No suggestions available at the moment.</p>
+              <?php else: ?>
+                <?php foreach ($suggested_recipes as $recipe): ?>
+                  <div style="background:var(--gray50); border:1px solid var(--gray100); border-radius:var(--radius-sm); padding:12px; display:flex; flex-direction:column; justify-content:space-between">
+                    <div>
+                      <div style="font-weight:700; color:var(--gray800); margin-bottom:2px; font-size:13.5px"><?php echo htmlspecialchars($recipe['title']); ?></div>
+                      <div style="font-size:11px; color:var(--gray400); margin-bottom:8px">
+                        Category: <?php echo htmlspecialchars($recipe['meal_type']); ?> &middot; Prep: <?php echo $recipe['prep_time_min']; ?> mins
+                      </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--gray100); padding-top:8px; margin-top:8px">
+                      <span style="font-weight:700; color:var(--g600); font-size:12.5px"><?php echo $recipe['calories']; ?> kcal</span>
+                      <a href="recipes.php" class="btn btn-secondary btn-sm" style="text-decoration:none; font-weight:700; padding:3px 8px; font-size:11px">View Recipe</a>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </div>
           </div>
         </div>
