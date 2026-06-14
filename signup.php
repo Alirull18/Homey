@@ -1,42 +1,42 @@
 <?php
 session_start();
 // // Hubungkan ke pangkalan data (database) menggunakan cara prosedural
-require_once 'php/db_connect.php'; 
+require_once 'php/db_connect.php';
 
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $full_name = trim($_POST['full_name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
+  $full_name = trim($_POST['full_name'] ?? '');
+  $email = trim($_POST['email'] ?? '');
+  $password = $_POST['password'] ?? '';
+  $confirm_password = $_POST['confirm_password'] ?? '';
 
-    if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password)) {
-        $error = "Please fill in all fields.";
-    } elseif ($password !== $confirm_password) {
-        $error = "Passwords do not match.";
-    } elseif (strlen($password) < 6) {
-        $error = "Password must be at least 6 characters long.";
+  if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password)) {
+    $error = "Please fill in all fields.";
+  } elseif ($password !== $confirm_password) {
+    $error = "Passwords do not match.";
+  } elseif (strlen($password) < 6) {
+    $error = "Password must be at least 6 characters long.";
+  } else {
+    // // Semak sama ada email ini sudah didaftarkan sebelumnya
+    $q_check = "SELECT user_id FROM users WHERE email = '$email'";
+    $res_check = mysqli_query($conn, $q_check);
+
+    if (mysqli_num_rows($res_check) > 0) {
+      $error = "Email address is already registered.";
     } else {
-        // // Semak sama ada email ini sudah didaftarkan sebelumnya
-        $q_check = "SELECT user_id FROM users WHERE email = '$email'";
-        $res_check = mysqli_query($conn, $q_check);
+      // // Masukkan rekod pengguna baru dengan password teks biasa (plain text)
+      $q_insert = "INSERT INTO users (full_name, email, password, role) VALUES ('$full_name', '$email', '$password', 'User')";
 
-        if (mysqli_num_rows($res_check) > 0) {
-            $error = "Email address is already registered.";
-        } else {
-            // // Masukkan rekod pengguna baru dengan password teks biasa (plain text)
-            $q_insert = "INSERT INTO users (full_name, email, password, role) VALUES ('$full_name', '$email', '$password', 'User')";
-            
-            if (mysqli_query($conn, $q_insert)) {
-                $success = "Registration successful! You can now sign in.";
-            } else {
-                $error = "Something went wrong: " . mysqli_error($conn);
-            }
-        }
-        mysqli_free_result($res_check);
+      if (mysqli_query($conn, $q_insert)) {
+        $success = "Registration successful! You can now sign in.";
+      } else {
+        $error = "Something went wrong: " . mysqli_error($conn);
+      }
     }
+    mysqli_free_result($res_check);
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -166,27 +166,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form name="signupForm" class="auth-form" method="POST" action="signup.php" onsubmit="return validateSignupForm()">
       <?php if ($error): ?>
-        <div style="background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
+        <div
+          style="background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
           <?php echo htmlspecialchars($error); ?>
         </div>
       <?php endif; ?>
-      
+
       <?php if ($success): ?>
-        <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
+        <div
+          style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
           <?php echo htmlspecialchars($success); ?>
         </div>
       <?php endif; ?>
-      
+
       <div class="form-group">
         <label class="form-label">Full Name</label>
-        <input type="text" name="full_name" class="form-input" placeholder="e.g. Ahmad Rizal" required value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : ''; ?>">
+        <input type="text" name="full_name" class="form-input" placeholder="e.g. Ahmad Rizal" required
+          value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : ''; ?>">
       </div>
 
       <div class="form-group">
         <label class="form-label">Email address</label>
-        <input type="email" name="email" class="form-input" placeholder="e.g. ahmad.rizal@email.com" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+        <input type="email" name="email" class="form-input" placeholder="e.g. ahmad.rizal@email.com" required
+          value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
       </div>
-      
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Password</label>

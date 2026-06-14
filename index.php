@@ -1,277 +1,416 @@
 <?php
 session_start();
-require_once 'php/db_connect.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
-$user_id = $_SESSION['user_id'];
-$full_name = $_SESSION['full_name'];
-
-// // 1. Ambil data profil pengguna dari database
-$q_user = "SELECT age, gender, weight_kg, height_cm, activity_level, goal_type FROM users WHERE user_id = '$user_id'";
-$res_user = mysqli_query($conn, $q_user);
-
-$is_new_user = true;
-$age = 0; $gender = 'Male'; $weight_kg = 0; $height_cm = 0; $activity_level = 'Lightly active (1–3x/week)'; $goal_type = 'Deficit';
-
-if ($res_user && mysqli_num_rows($res_user) > 0) {
-    $row_u = mysqli_fetch_array($res_user);
-    if ($row_u['weight_kg'] !== null && $row_u['height_cm'] !== null && $row_u['age'] !== null) {
-        $is_new_user = false;
-        $age = (int)$row_u['age'];
-        $gender = $row_u['gender'] ? $row_u['gender'] : 'Male';
-        $weight_kg = (float)$row_u['weight_kg'];
-        $height_cm = (float)$row_u['height_cm'];
-        $activity_level = $row_u['activity_level'] ? $row_u['activity_level'] : 'Lightly active (1–3x/week)';
-        $goal_type = $row_u['goal_type'] ? $row_u['goal_type'] : 'Deficit';
-    }
-    mysqli_free_result($res_user);
-}
-
-// // Kira semula TDEE & sasaran kalori menggunakan formula Mifflin-St Jeor
-if ($is_new_user) {
-    $bmr = 0;
-    $tdee = 0;
-    $targetKcal = 0;
-    $goal_type_display = 'Not Configured';
-} else {
-    $bmr = ($gender === 'Male') ? (10 * $weight_kg + 6.25 * $height_cm - 5 * $age + 5) : (10 * $weight_kg + 6.25 * $height_cm - 5 * $age - 161);
-    $multiplier = 1.375;
-    if (strpos($activity_level, 'Sedentary') !== false) $multiplier = 1.2;
-    elseif (strpos($activity_level, 'Lightly') !== false) $multiplier = 1.375;
-    elseif (strpos($activity_level, 'Moderately') !== false) $multiplier = 1.55;
-    elseif (strpos($activity_level, 'Very') !== false) $multiplier = 1.725;
-
-    $tdee = round($bmr * $multiplier);
-    if ($goal_type === 'Deficit') $targetKcal = $tdee - 400;
-    elseif ($goal_type === 'Surplus') $targetKcal = $tdee + 300;
-    else $targetKcal = $tdee;
-    
-    $goal_type_display = $goal_type;
-}
-
-// // 2. Dapatkan rekod makanan pengguna untuk hari ini
-$today = date('Y-m-d');
-$q_meals = "SELECT log_id, meal_name, meal_type, log_time, calories FROM meal_logs WHERE user_id = '$user_id' AND log_date = '$today' ORDER BY log_time ASC";
-$res_meals = mysqli_query($conn, $q_meals);
-$meals = [];
-$totalKcal = 0;
-if ($res_meals) {
-    while ($row = mysqli_fetch_array($res_meals)) {
-        $meals[] = $row;
-        $totalKcal += $row['calories'];
-    }
-    mysqli_free_result($res_meals);
-}
-
-$remKcal = $targetKcal - $totalKcal;
-if ($remKcal < 0) $remKcal = 0;
-$kcalPct = $targetKcal > 0 ? round(($totalKcal / $targetKcal) * 100) : 0;
-if ($kcalPct > 100) $kcalPct = 100;
-
-// // 3. Dapatkan rekod air minuman pengguna untuk hari ini
-$cupsCount = 0;
-$q_hydro = "SELECT cups_drank FROM hydration_logs WHERE user_id = '$user_id' AND log_date = '$today'";
-$res_hydro = mysqli_query($conn, $q_hydro);
-if ($res_hydro && mysqli_num_rows($res_hydro) > 0) {
-    $row_h = mysqli_fetch_array($res_hydro);
-    $cupsCount = $row_h['cups_drank'];
-    mysqli_free_result($res_hydro);
-}
-$waterLiters = $cupsCount * 0.25;
-$waterPct = round(($cupsCount / 10) * 100);
-if ($waterPct > 100) $waterPct = 100;
-
-
-$suggested_recipes = [];
-if ($is_new_user) {
-    // Fallback if user profile isn't configured
-    $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
-                  FROM recipes r 
-                  JOIN users u ON r.author_id = u.user_id 
-                  WHERE r.status = 'Approved' 
-                  ORDER BY r.created_at DESC LIMIT 3";
-} else {
-    if ($goal_type === 'Deficit') {
-        // Recommend lower calorie meals for weight loss
-        $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
-                      FROM recipes r 
-                      JOIN users u ON r.author_id = u.user_id 
-                      WHERE r.status = 'Approved' AND r.calories < 400 
-                      ORDER BY r.calories ASC LIMIT 3";
-    } elseif ($goal_type === 'Surplus') {
-        // Recommend higher calorie meals for weight gain
-        $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
-                      FROM recipes r 
-                      JOIN users u ON r.author_id = u.user_id 
-                      WHERE r.status = 'Approved' AND r.calories >= 550 
-                      ORDER BY r.calories DESC LIMIT 3";
-    } else {
-        // Maintain: Recommend moderate calorie meals
-        $q_suggest = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
-                      FROM recipes r 
-                      JOIN users u ON r.author_id = u.user_id 
-                      WHERE r.status = 'Approved' AND r.calories BETWEEN 400 AND 549 
-                      ORDER BY r.created_at DESC LIMIT 3";
-    }
-}
-
-$res_suggest = mysqli_query($conn, $q_suggest);
-if ($res_suggest) {
-    while ($row = mysqli_fetch_array($res_suggest)) {
-        $suggested_recipes[] = $row;
-    }
-    mysqli_free_result($res_suggest);
-}
-
-// Fallback if no recipes match the strict calorie filter
-if (count($suggested_recipes) === 0) {
-    $q_fallback = "SELECT r.recipe_id, r.title, r.calories, r.meal_type, r.prep_time_min, u.full_name as author_name 
-                   FROM recipes r 
-                   JOIN users u ON r.author_id = u.user_id 
-                   WHERE r.status = 'Approved' 
-                   ORDER BY r.created_at DESC LIMIT 3";
-    $res_fallback = mysqli_query($conn, $q_fallback);
-    if ($res_fallback) {
-        while ($row = mysqli_fetch_array($res_fallback)) {
-            $suggested_recipes[] = $row;
-        }
-        mysqli_free_result($res_fallback);
-    }
-}
-
-// // Set menu aktif untuk paparan di sidebar
-$active_page = 'dashboard';
+$is_logged_in = isset($_SESSION['user_id']);
+$full_name = $is_logged_in ? $_SESSION['full_name'] : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homey – Smart Recipe & Food Suggestion System</title>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homey - Ideal Diet Planner</title>
+    <meta name="description" content="Get personalized, dynamic diet plans that adapt to your life. Build your plate, calculate calories, and achieve your dream body with Homey.">
+    <!-- Link to the main stylesheet containing liquid glass & interactive selector rules -->
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- Google Fonts: Outfit (headings) and Inter (body copy) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
-  <div id="app">
-    <!-- // NAVIGASI SISI (SIDEBAR) -->
-    <?php include 'php/sidebar.php'; ?>
 
-    <!-- // BAHAGIAN UTAMA HALAMAN DASHBOARD -->
-    <div id="main">
-      <div id="topbar">
-        <div>
-          <div class="tb-title">Dashboard</div>
-          <div class="tb-sub"><?php echo date('l, d F Y'); ?></div>
-        </div>
-        <div class="tb-right">
-          <div class="avatar"><?php echo htmlspecialchars($sidebar_initials); ?></div>
-          <span style="font-size:13px;color:var(--gray500)"><?php echo htmlspecialchars($full_name); ?></span>
-        </div>
-      </div>
-
-      <div id="content">
-        <div class="page">
-          <!-- // PAPARAN MAKLUMAT MATLAMAT KALORI -->
-          <div class="goal-banner">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div class="goal-icon">🎯</div>
-              <div>
-                <div class="goal-title">Calorie <?php echo htmlspecialchars($goal_type_display); ?> Active — <?php echo $targetKcal; ?> kcal/day</div>
-                <div class="goal-sub"><?php echo $remKcal; ?> kcal remaining today · TDEE: <?php echo $tdee; ?> kcal</div>
-              </div>
-            </div>
-            <span class="tag tag-g">Active Goal</span>
-          </div>
-
-          <!-- // BAHAGIAN KAD STATISTIK UTAMA -->
-          <div class="g4" style="margin-bottom:16px">
-            <div class="card">
-              <div class="metric-lbl">Today's intake</div>
-              <div class="metric-val"><?php echo $totalKcal; ?> <small>kcal</small></div>
-              <div class="bar-wrap"><div class="bar bar-g" style="width:<?php echo $kcalPct; ?>%"></div></div>
-              <div class="metric-sub"><?php echo $remKcal; ?> kcal remaining</div>
-            </div>
-            
-            <div class="card">
-              <div class="metric-lbl">Water today</div>
-              <div class="metric-val" style="color:var(--b500)"><?php echo number_format($waterLiters, 1); ?> <small>L</small></div>
-              <div class="bar-wrap"><div class="bar bar-b" style="width:<?php echo $waterPct; ?>%"></div></div>
-              <div class="metric-sub">Goal: 2.5 L (10 Cups)</div>
-            </div>
-            
-            <div class="card">
-              <div class="metric-lbl">Daily target</div>
-              <div class="metric-val"><?php echo $targetKcal; ?> <small>kcal</small></div>
-              <div class="bar-wrap"><div class="bar bar-g" style="width:<?php echo $is_new_user ? '0' : '100'; ?>%"></div></div>
-              <div class="metric-sub"><?php echo $is_new_user ? 'Setup required' : 'Based on Mifflin-St Jeor'; ?></div>
-            </div>
-            
-            <div class="card">
-              <div class="metric-lbl">Meals logged</div>
-              <div class="metric-val"><?php echo count($meals); ?> <small>/ 4</small></div>
-              <div class="bar-wrap"><div class="bar bar-a" style="width:<?php echo min(100, count($meals)*25); ?>%"></div></div>
-              <div class="metric-sub">Target: 3 meals + 1 snack</div>
-            </div>
-          </div>
-
-          <!-- // SENARAI LOG MAKANAN PENGGUNA HARI INI -->
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Today's meal log <span class="card-link"><a href="calories.php" style="color:inherit;text-decoration:none">+ Log</a></span></div>
-            <div style="display:flex;flex-direction:column;gap:6px">
-              <?php if (count($meals) === 0): ?>
-                <p style="color:var(--gray400);font-size:13px;padding:10px 0;margin:0">No meals logged for today yet.</p>
-              <?php else: ?>
-                <?php foreach ($meals as $m): ?>
-                  <div class="entry" style="display:flex; justify-content:space-between; align-items:center">
-                    <div>
-                      <div class="en" style="font-weight:700; color:var(--gray800); margin-bottom:2px"><?php echo htmlspecialchars($m['meal_name']); ?></div>
-                      <div class="es" style="font-size:11px; color:var(--gray400)"><?php echo htmlspecialchars($m['meal_type']); ?> · <?php echo date('h:i a', strtotime($m['log_time'])); ?></div>
-                    </div>
-                    <div class="ec" style="font-weight:700; color:var(--g600)"><?php echo $m['calories']; ?> kcal</div>
-                  </div>
-                <?php endforeach; ?>
-              <?php endif; ?>
-              <a href="calories.php" class="btn btn-secondary btn-full" style="margin-top:4px; text-align:center; text-decoration:none; font-weight:700">+ Go to calorie tracker</a>
-            </div>
-          </div>
-
-          <!-- // MAKANAN DICADANGKAN (FOOD SUGGESTION) -->
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">
-              <span>Suggested Meals for You</span>
-              <span style="font-size:11.5px; font-weight:normal; color:var(--gray500)">Tailored for your <?php echo htmlspecialchars($goal_type_display); ?> goal</span>
-            </div>
-            
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px">
-              <?php if (count($suggested_recipes) === 0): ?>
-                <p style="color:var(--gray400); font-size:13px; padding:10px 0; margin:0">No suggestions available at the moment.</p>
-              <?php else: ?>
-                <?php foreach ($suggested_recipes as $recipe): ?>
-                  <div style="background:var(--gray50); border:1px solid var(--gray100); border-radius:var(--radius-sm); padding:12px; display:flex; flex-direction:column; justify-content:space-between">
-                    <div>
-                      <div style="font-weight:700; color:var(--gray800); margin-bottom:2px; font-size:13.5px"><?php echo htmlspecialchars($recipe['title']); ?></div>
-                      <div style="font-size:11px; color:var(--gray400); margin-bottom:8px">
-                        Category: <?php echo htmlspecialchars($recipe['meal_type']); ?> &middot; Prep: <?php echo $recipe['prep_time_min']; ?> mins
-                      </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--gray100); padding-top:8px; margin-top:8px">
-                      <span style="font-weight:700; color:var(--g600); font-size:12.5px"><?php echo $recipe['calories']; ?> kcal</span>
-                      <a href="recipes.php" class="btn btn-secondary btn-sm" style="text-decoration:none; font-weight:700; padding:3px 8px; font-size:11px">View Recipe</a>
-                    </div>
-                  </div>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- 
+      BACKGROUND COMPONENT: Liquid Glass Animated Backdrop
+      Contains the colored blobs that animate using CSS keyframes.
+      The glass-overlay frosted panel blends and blurs them together.
+    -->
+    <div class="liquid-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
+        <div class="glass-overlay"></div>
     </div>
-  </div>
-</body>
 
+    <!-- 
+      INTERACTIVE TRIGGER (TESTIMONIALS FILTER):
+      These radio buttons are positioned at the root level so that the ~ sibling selector
+      can scan downwards and control testimonial cards located within .page-wrapper.
+    -->
+    <input type="radio" id="filter-all" name="testimonial-filter" class="filter-radio" checked>
+    <input type="radio" id="filter-loss" name="testimonial-filter" class="filter-radio">
+    <input type="radio" id="filter-gain" name="testimonial-filter" class="filter-radio">
+
+    <!-- 
+      INTERACTIVE TRIGGER (MOBILE NAV MENU):
+      Checking this input displays/hides the .mobile-drawer overlay using CSS sibling selection.
+    -->
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox">
+
+    <!-- 
+      HEADER: Glassmorphic Floating Navigation Header
+      Stays fixed at the top of the viewport.
+    -->
+    <header class="glass-header">
+        <div class="nav-container container">
+            <!-- Website Logo using the official Homey logo image -->
+            <a href="#" class="logo">
+                <img src="https://www.homey.com.my/images/Homey_logo.png" alt="Homey Logo" style="height: 35px; width: auto; object-fit: contain;">
+            </a>
+
+            <!-- Desktop Menu Options -->
+            <nav class="nav-menu">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#about-us" class="nav-link">About Us</a>
+                <a href="#testimonials" class="nav-link">Success Stories</a>
+                <?php if (!$is_logged_in): ?>
+                    <a href="login.php" class="nav-link">Sign In</a>
+                <?php endif; ?>
+            </nav>
+
+            <!-- Desktop Call-To-Action Button -->
+            <div class="nav-cta" style="display: flex; align-items: center; gap: 15px;">
+                <?php if ($is_logged_in): ?>
+                    <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">Hi, <?php echo htmlspecialchars($full_name); ?></span>
+                    <a href="dashboard.php" class="btn btn-primary btn-sm">Go to Dashboard</a>
+                    <a href="logout.php" class="btn btn-outline btn-sm">Logout</a>
+                <?php else: ?>
+                    <a href="signup.php" class="btn btn-primary btn-sm">Get Started</a>
+                <?php endif; ?>
+            </div>
+
+            <!-- 
+              MOBILE NAV HAMBURGER TRIGGER:
+              A label matching the #nav-toggle input. Clicking this toggles the checkbox state.
+            -->
+            <label for="nav-toggle" class="nav-toggle-label">
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
+        </div>
+    </header>
+
+    <!-- 
+      MOBILE DRAWER MENU:
+      An off-canvas nav drawer that slides in when #nav-toggle is checked.
+      The inline onclick code unchecks the input to close the drawer automatically upon selection.
+    -->
+    <div class="mobile-drawer">
+        <nav class="mobile-nav-links">
+            <a href="#features" onclick="document.getElementById('nav-toggle').checked = false;">Features</a>
+            <a href="#about-us" onclick="document.getElementById('nav-toggle').checked = false;">About Us</a>
+            <a href="#testimonials" onclick="document.getElementById('nav-toggle').checked = false;">Success Stories</a>
+            <?php if ($is_logged_in): ?>
+                <a href="dashboard.php" class="btn btn-primary" onclick="document.getElementById('nav-toggle').checked = false;">Go to Dashboard</a>
+                <a href="logout.php" class="btn btn-outline" onclick="document.getElementById('nav-toggle').checked = false;">Logout</a>
+            <?php else: ?>
+                <a href="login.php" class="btn btn-outline" onclick="document.getElementById('nav-toggle').checked = false;">Sign In</a>
+                <a href="signup.php" class="btn btn-primary" onclick="document.getElementById('nav-toggle').checked = false;">Get Started</a>
+            <?php endif; ?>
+        </nav>
+    </div>
+
+    <!-- 
+      MAIN WRAPPER:
+      Houses all page sections and serves as a sibling target for root filter controls.
+    -->
+    <div class="page-wrapper">
+
+        <!-- HERO SECTION: Hook messaging + Static Dashboard Graphic -->
+        <section class="hero-section container">
+            <div class="hero-grid">
+                <!-- Hero messaging column -->
+                <div class="hero-content">
+                    <h1>Nutrition that adapts to your life, not the other way around.</h1>
+                    <p class="lead">Get custom-tailored meal schedules, smart macro-balancing, and local grocery integration—all responsive to your body and cravings.</p>
+                    <div class="hero-buttons">
+                        <?php if ($is_logged_in): ?>
+                            <a href="dashboard.php" class="btn btn-primary">Get Started</a>
+                        <?php else: ?>
+                            <a href="signup.php" class="btn btn-primary">Get Started</a>
+                        <?php endif; ?>
+                        <a href="#about-us" class="btn btn-outline">About Us</a>
+                    </div>
+                </div>
+
+                <!-- Hero visual column representing the diet planner dashboard UI -->
+                <div class="hero-mockup-wrapper">
+                    <div class="glass-card hero-mockup">
+                        <div class="mockup-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="mockup-title">Homey Dashboard Preview</span>
+                        </div>
+                        <div class="mockup-body">
+                            <!-- Active Goal Banner -->
+                            <div class="mock-goal-banner">
+                                <span class="mock-goal-icon">🎯</span>
+                                <div class="mock-goal-text">
+                                    <div class="mock-goal-title">Calorie Deficit Active — 1,850 kcal/day</div>
+                                    <div class="mock-goal-sub">1,430 kcal remaining today · TDEE: 2,250 kcal</div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics Grid -->
+                            <div class="mock-metrics-grid">
+                                <div class="mock-metric-card">
+                                    <div class="mock-metric-lbl">Intake</div>
+                                    <div class="mock-metric-val">420 <small>kcal</small></div>
+                                    <div class="mock-bar-wrap"><div class="mock-bar mock-bar-g" style="width: 23%"></div></div>
+                                </div>
+                                <div class="mock-metric-card">
+                                    <div class="mock-metric-lbl">Water today</div>
+                                    <div class="mock-metric-val" style="color:#3B82F6">1.5 <small>L</small></div>
+                                    <div class="mock-bar-wrap"><div class="mock-bar mock-bar-b" style="width: 60%"></div></div>
+                                </div>
+                                <div class="mock-metric-card">
+                                    <div class="mock-metric-lbl">Daily Target</div>
+                                    <div class="mock-metric-val">1,850 <small>kcal</small></div>
+                                    <div class="mock-bar-wrap"><div class="mock-bar mock-bar-g" style="width: 100%"></div></div>
+                                </div>
+                                <div class="mock-metric-card">
+                                    <div class="mock-metric-lbl">Meals Logged</div>
+                                    <div class="mock-metric-val">1 <small>/ 4</small></div>
+                                    <div class="mock-bar-wrap"><div class="mock-bar mock-bar-a" style="width: 25%"></div></div>
+                                </div>
+                            </div>
+
+                            <!-- Today's Meal Log -->
+                            <div class="mock-meal-log-title">Today's Meal Log</div>
+                            <div class="mock-meal-list">
+                                <div class="mock-meal-entry">
+                                    <div>
+                                        <div class="mock-meal-name">Avocado Toast & Poached Egg</div>
+                                        <div class="mock-meal-meta">Breakfast · 08:00 AM</div>
+                                    </div>
+                                    <div class="mock-meal-cal">420 kcal</div>
+                                </div>
+                                <div class="mock-meal-entry">
+                                    <div>
+                                        <div class="mock-meal-name">Grilled Salmon & Quinoa Bowl</div>
+                                        <div class="mock-meal-meta">Lunch · 01:00 PM</div>
+                                    </div>
+                                    <div class="mock-meal-cal">650 kcal</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES SECTION: Core values grids -->
+        <section id="features" class="features-section container">
+            <div class="section-header">
+                <span class="section-tag">Powerful Features</span>
+                <h2>What Homey Offers</h2>
+                <p>Designed with procedural simplicity to make tracking your metrics intuitive and straightforward.</p>
+            </div>
+            <!-- Grid cards displaying main system features -->
+            <div class="features-grid">
+                <div class="glass-card feature-card">
+                    <div class="feature-icon bg-emerald">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <h3>Personalized Dashboard</h3>
+                    <p>Get real-time calorie goals computed using Mifflin-St Jeor formulas based on your age, height, and activity level.</p>
+                </div>
+
+                <div class="glass-card feature-card">
+                    <div class="feature-icon bg-orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                    </div>
+                    <h3>Calorie & Intake Tracker</h3>
+                    <p>Easily log daily meals (Breakfast, Lunch, Dinner, Snacks) and automatically calculate protein, fat, and carbohydrate ratios.</p>
+                </div>
+
+                <div class="glass-card feature-card">
+                    <div class="feature-icon bg-mint">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9 6.5 6 10 6 14a6 6 0 0 0 12 0c0-4-3-7.5-6-12z"/></svg>
+                    </div>
+                    <h3>Hydration Logs</h3>
+                    <p>Record your daily cups of water (250ml each) and view historical logs to build a healthy hydration routine.</p>
+                </div>
+
+                <div class="glass-card feature-card">
+                    <div class="feature-icon bg-orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h10"/></svg>
+                    </div>
+                    <h3>Community Recipes</h3>
+                    <p>Share customized culinary guides with the community, explore ideas approved by administrators, and log meals with a single click.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT US SECTION: Team & Story -->
+        <section id="about-us" class="about-section container" style="padding: 5rem 0;">
+            <div class="section-header">
+                <span class="section-tag">About Homey</span>
+                <h2>Dedicated to your nutritional success</h2>
+                <p>We believe that healthy living should be intuitive, accessible, and scientifically grounded.</p>
+            </div>
+            
+            <div class="glass-card" style="padding: 3.5rem; max-width: 800px; margin: 0 auto 4rem auto; border-radius: 24px;">
+                <h3 style="font-size: 2rem; margin-bottom: 1.5rem; color: var(--text-main); text-align: center; font-family: var(--font-heading);">Our Story</h3>
+                <p style="margin-bottom: 1.5rem; line-height: 1.8; font-size: 1.05rem; text-align: justify; color: var(--text-main);">Homey was founded to bridge the gap between strict clinical science and busy daily routines. By using personalized physiological models, Homey helps individuals achieve their ideal weight and hydration targets without feeling restricted.</p>
+                <p style="line-height: 1.8; font-size: 1.05rem; text-align: justify; color: var(--text-main); margin-bottom: 0;">Whether you are looking to lose body fat, build lean muscle mass, or maintain a healthy metabolic baseline, our planner adapts to your actual inputs and supports your journey every step of the way.</p>
+            </div>
+
+            <!-- Leadership Team Sub-section -->
+            <div class="team-section">
+                <div class="section-header" style="margin-bottom: 2.5rem;">
+                    <span class="section-tag">Our Team</span>
+                    <h2>Meet our experts</h2>
+                    <p>A professional coalition of medical doctors, dietitians, and technologists.</p>
+                </div>
+                <div class="team-grid">
+                    <!-- Member 1 -->
+                    <div class="glass-card team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://www.homey.com.my/images/Dr-Tan-Wooi-Peng.png" alt="Dr Tan Wooi Peng">
+                        </div>
+                        <h3>Dr. Tan Wooi Peng</h3>
+                        <span class="position">Founder & CSO</span>
+                        <p class="bio">Medical doctor with over 10 years experience in primary care. Believer of evidence-based lifestyle medicine.</p>
+                    </div>
+                    <!-- Member 2 -->
+                    <div class="glass-card team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://www.homey.com.my/images/yichien.jpg" alt="Yi Chien">
+                        </div>
+                        <h3>Yi Chien</h3>
+                        <span class="position">Co-Founder, CEO & Dietitian</span>
+                        <p class="bio">Certified dietitian (UPM, MDA) passionate about evidence-based community nutrition and wellness education.</p>
+                    </div>
+                    <!-- Member 3 -->
+                    <div class="glass-card team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://www.homey.com.my/images/Ms%20Choong%20Jia%20Yee.jpg" alt="Choong Jia Yee">
+                        </div>
+                        <h3>Ms. Choong Jia Yee</h3>
+                        <span class="position">Co-Founder & CTO</span>
+                        <p class="bio">Lead technologist with vast system design experience, focusing on intuitive web accessibility for all age cohorts.</p>
+                    </div>
+                    <!-- Member 4 -->
+                    <div class="glass-card team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://www.homey.com.my/images/photo_2018-11-20_12-44-59.jpg" alt="Lum KL">
+                        </div>
+                        <h3>Lum KL</h3>
+                        <span class="position">COO</span>
+                        <p class="bio">Experienced F&B operations manager ensuring fresh meals are cooked and delivered on-time to doorsteps.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 
+          TESTIMONIALS SECTION: 
+          Success stories filter system driven by root radio buttons (`filter-radio`).
+        -->
+        <section id="testimonials" class="testimonials-section container">
+            <div class="section-header">
+                <span class="section-tag">Success Stories</span>
+                <h2>Real stories. Real metrics.</h2>
+                <p>Filter testimonials below to see how users with your target goals achieved success.</p>
+            </div>
+
+            <!-- Filters (Labels triggering root level radio inputs) -->
+            <div class="testimonial-filters">
+                <label for="filter-all" class="filter-btn all-btn">All Stories</label>
+                <label for="filter-loss" class="filter-btn loss-btn">Weight Loss</label>
+                <label for="filter-gain" class="filter-btn gain-btn">Muscle Gain</label>
+            </div>
+
+            <!-- Review Cards Grid -->
+            <div class="stories-grid">
+                <!-- Siti Aminah: Weight Loss Testimonial -->
+                <div class="glass-card story-card loss">
+                    <div class="story-user">
+                        <div>
+                            <h4>Siti Aminah</h4>
+                            <span class="user-meta">Lost 12 kg in 4 Months</span>
+                        </div>
+                    </div>
+                    <div class="rating">⭐⭐⭐⭐⭐</div>
+                    <p class="story-text">"Very helpful web for losing weight. I successfully lost weight and became healthier."</p>
+                    <span class="story-badge tag-green">Fat Loss Goal</span>
+                </div>
+
+                <!-- Marcus Lim: Muscle Gain Testimonial -->
+                <div class="glass-card story-card gain">
+                    <div class="story-user">
+                        <div>
+                            <h4>Marcus Lim</h4>
+                            <span class="user-meta">Gained 6 kg lean muscle</span>
+                        </div>
+                    </div>
+                    <div class="rating">⭐⭐⭐⭐⭐</div>
+                    <p class="story-text">"Great system for muscle building. It helps me easily manage my daily calories."</p>
+                    <span class="story-badge tag-orange">Muscle Gain Goal</span>
+                </div>
+
+                <!-- Dr. Elena Low: Weight Loss Testimonial -->
+                <div class="glass-card story-card loss">
+                    <div class="story-user">
+                        <div>
+                            <h4>Dr. Elena Low</h4>
+                            <span class="user-meta">Consistent energy levels</span>
+                        </div>
+                    </div>
+                    <div class="rating">⭐⭐⭐⭐⭐</div>
+                    <p class="story-text">"Very accurate calorie calculator. It is very useful for patient diet references."</p>
+                    <span class="story-badge tag-green">Fat Loss Goal</span>
+                </div>
+
+                <!-- David Kumar: Muscle Gain Testimonial -->
+                <div class="glass-card story-card gain">
+                    <div class="story-user">
+                        <div>
+                            <h4>David Kumar</h4>
+                            <span class="user-meta">Gained 8 kg muscle mass</span>
+                        </div>
+                    </div>
+                    <div class="rating">⭐⭐⭐⭐⭐</div>
+                    <p class="story-text">"Easy to log water intake every day. It helps me make sure I drink enough water."</p>
+                    <span class="story-badge tag-orange">Muscle Gain Goal</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER: Branding, links column, and copy notices -->
+        <footer class="footer-area">
+            <div class="footer-container container">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="https://www.homey.com.my/images/Homey_logo.png" alt="Homey Logo" style="height: 30px; width: auto; object-fit: contain;">
+                    </div>
+                    <p>Building high-fidelity tools to integrate balanced science into daily habits.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="link-col">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#about-us">About Us</a>
+                        <a href="#testimonials">Success Stories</a>
+                    </div>
+                    <div class="link-col">
+                        <h4>System Features</h4>
+                        <a href="calories.php">Calorie Tracker</a>
+                        <a href="hydration.php">Hydration Tracker</a>
+                        <a href="recipes.php">Recipes Library</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom container">
+                <p>&copy; 2026 Homey Systems. All rights reserved.</p>
+            </div>
+        </footer>
+
+    </div>
+
+</body>
 </html>

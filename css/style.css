@@ -120,16 +120,6 @@
       border-bottom: 1px solid var(--gray100)
     }
 
-    .sb-logo-icon {
-      width: 34px;
-      height: 34px;
-      background: var(--g500);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px
-    }
 
     .sb-logo-text {
       font-family: var(--font-display);
@@ -997,7 +987,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px
+      margin-bottom: 16px;
     }
 
     .sec-title {
@@ -1006,3 +996,4 @@
       font-weight: 700;
       color: var(--gray900)
     }
+

@@ -28,8 +28,7 @@ if (!isset($active_page)) {
 <!-- // MENU NAVIGASI SISI (SIDEBAR) -->
 <div id="sidebar">
   <div class="sb-logo">
-    <div class="sb-logo-icon">🥗</div>
-    <div style="margin-left: 10px;">
+    <div>
       <h2 style="margin:0; font-size: 20px; color: #333;">Homey</h2>
       <p style="margin:0; font-size: 12px; color: #666;"><?php echo ($sidebar_role === 'Admin') ? 'NutriLife Administrator' : 'NutriLife Member'; ?></p>
     </div>
@@ -38,7 +37,7 @@ if (!isset($active_page)) {
   <div id="nav-links">
     <div class="sb-sec">Main</div>
     
-    <a href="index.php" class="sb-item <?php echo ($active_page === 'dashboard') ? 'active' : ''; ?>">
+    <a href="dashboard.php" class="sb-item <?php echo ($active_page === 'dashboard') ? 'active' : ''; ?>">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />

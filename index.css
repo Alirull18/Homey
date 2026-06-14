@@ -1,0 +1,1891 @@
+/* ==========================================================================
+   DESIGN SYSTEM & CONSTANTS
+   ========================================================================== */
+:root {
+    /* Color Palette - Option 1: Fresh & Organic */
+    --bg-sage: #F4F8F6;
+    --primary: #10B981;       /* Emerald Green (Primary Actions) */
+    --primary-hover: #059669;
+    --primary-light: rgba(16, 185, 129, 0.1);
+    
+    --accent-green: #047857;  /* Deep Sage Green (Success Elements) */
+    --accent-green-light: rgba(4, 120, 87, 0.08);
+    
+    --highlight: #F97316;     /* Apricot Orange (Warning/Secondary CTAs) */
+    --highlight-hover: #EA580C;
+    --highlight-light: rgba(249, 115, 22, 0.08);
+    
+    --text-main: #1E293B;     /* Charcoal Dark (Body text & Headings) */
+    --text-muted: #64748B;    /* Soft Gray (Secondary descriptions) */
+    --white: #FFFFFF;
+    
+    /* Glassmorphism Specs 
+       Using low opacity backgrounds combined with backdrop filter blurs and thin borders. */
+    --glass-bg: rgba(255, 255, 255, 0.45);
+    --glass-bg-hover: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    
+    /* Elegant multi-layer shadow setups for frosted glass depth */
+    --glass-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.06), 
+                    0 1px 2px 0 rgba(0, 0, 0, 0.02),
+                    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+    --glass-shadow-hover: 0 12px 40px 0 rgba(16, 185, 129, 0.12), 
+                          0 4px 10px 0 rgba(0, 0, 0, 0.04),
+                          inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+                          
+    /* Fonts */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    
+    /* Standard Transition Presets (iOS-like physics) */
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-quick: all 0.2s ease;
+}
+
+/* ==========================================================================
+   RESET & GLOBAL BASE STYLES
+   ========================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-sage);
+    color: var(--text-main);
+    overflow-x: hidden;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: var(--transition-quick);
+}
+
+img, svg {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+}
+
+/* Layout Utilities */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* ==========================================================================
+   BACKGROUNDS & LIQUID GLASS EFFECT
+   ========================================================================== */
+.liquid-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none; /* Make background click-through */
+}
+
+/* Blurry fluid background color structures */
+.blob {
+    position: absolute;
+    mix-blend-mode: multiply; /* Blends colors together seamlessly */
+    filter: blur(60px);
+    opacity: 0.65;
+    border-radius: 50%;
+}
+
+/* 
+   Fluid Blob Coordinates and Keyframe Assignments
+   Animations move, scale, and spin color blobs slowly to simulate organic liquid glass movement.
+*/
+.blob-1 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, rgba(16,185,129,0) 70%);
+    top: -10%;
+    left: -10%;
+}
+
+.blob-2 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(249,115,22,0.18) 0%, rgba(249,115,22,0) 70%);
+    bottom: -10%;
+    right: -10%;
+}
+
+.blob-3 {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(4,120,87,0.2) 0%, rgba(4,120,87,0) 70%);
+    top: 40%;
+    left: 50%;
+}
+
+.blob-4 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0) 70%);
+    bottom: 30%;
+    left: 10%;
+}
+
+/* 
+   Frosted Glass overlay filter
+   Using a heavy blur (80px) and micro-opaque white base to turn active blobs
+   into a unified liquid gradient.
+*/
+.glass-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(80px);
+    -webkit-backdrop-filter: blur(80px);
+    background: rgba(244, 248, 246, 0.45);
+    z-index: 1;
+}
+
+/* ==========================================================================
+   GLASSMOPHISM COMPONENTS
+   ========================================================================== */
+.glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 24px;
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+    background: var(--glass-bg-hover);
+    box-shadow: var(--glass-shadow-hover);
+}
+
+/* ==========================================================================
+   TYPOGRAPHY & BUTTONS
+   ========================================================================== */
+h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    color: var(--text-main);
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+h1 {
+    font-size: 3.5rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+p {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.lead {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--white);
+    border: 1px solid var(--glass-border);
+    color: var(--accent-green);
+    padding: 0.5rem 1rem;
+    border-radius: 99px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+/* Button UI transitions and hover scale displacements */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem 2rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-quick);
+}
+
+.btn-sm {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    border-radius: 10px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-outline {
+    background: var(--white);
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.btn-outline:hover {
+    background: var(--bg-sage);
+    border-color: var(--text-muted);
+    transform: translateY(-2px);
+}
+
+.btn-full {
+    display: flex;
+    width: 100%;
+}
+
+.glowing-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-green) 100%);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+
+.glowing-btn:hover {
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
+}
+
+/* ==========================================================================
+   NAVIGATION BAR (Frosted Sticky Navigation)
+   ========================================================================== */
+.glass-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: 0 2px 20px rgba(16, 185, 129, 0.04);
+    height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 2.25rem;
+}
+
+.nav-link {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    position: relative;
+    padding: 0.25rem 0;
+}
+
+.nav-link:hover {
+    color: var(--primary);
+}
+
+/* Inline sliding underlines under active/hover links */
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* Hidden drawer trigger input */
+.nav-toggle-checkbox {
+    display: none;
+}
+
+/* Custom Hamburger Drawer Button styling */
+.nav-toggle-label {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    cursor: pointer;
+    z-index: 110;
+}
+
+.nav-toggle-label span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background-color: var(--text-main);
+    border-radius: 9px;
+    transition: var(--transition-quick);
+}
+
+/* Off-canvas mobile menu navigation wrapper */
+.mobile-drawer {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 80px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(100%);
+    transition: var(--transition-smooth);
+    border-top: 1px solid var(--glass-border);
+}
+
+.mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   HERO SECTION
+   ========================================================================== */
+.hero-section {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.hero-content h1 {
+    line-height: 1.15;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.hero-trust {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.avatar-group {
+    display: flex;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 2px solid var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-left: -12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.avatar:first-child {
+    margin-left: 0;
+}
+
+.hero-trust span {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* 
+   Mockup Card tilt mechanics
+   Rotating on Y/X axes by default, leveling when hovered to mimic UI responsiveness.
+*/
+.hero-mockup-wrapper {
+    position: relative;
+}
+
+.hero-mockup-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 110%;
+    height: 110%;
+    background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%);
+    top: -5%;
+    left: -5%;
+    z-index: -1;
+    border-radius: 40px;
+}
+
+.hero-mockup {
+    transition: var(--transition-smooth);
+}
+
+.hero-mockup-wrapper:hover .hero-mockup {
+    transform: translateY(-4px);
+}
+
+.mockup-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.red { background-color: #EF4444; }
+.dot.yellow { background-color: #F59E0B; }
+.dot.green { background-color: #10B981; }
+
+.mockup-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+}
+
+.mockup-body {
+    padding: 1.5rem;
+}
+
+/* Mock Dashboard Components */
+.mock-goal-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+
+.mock-goal-icon {
+    font-size: 1.25rem;
+}
+
+.mock-goal-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.mock-goal-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    line-height: 1.2;
+}
+
+.mock-goal-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.mock-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.mock-metric-card {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    text-align: left;
+}
+
+.mock-metric-lbl {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.15rem;
+}
+
+.mock-metric-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
+}
+
+.mock-metric-val small {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.mock-bar-wrap {
+    height: 6px;
+    background: rgba(100, 116, 139, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mock-bar {
+    height: 100%;
+    border-radius: 3px;
+}
+
+.mock-bar-g { background-color: var(--primary); }
+.mock-bar-b { background-color: #3B82F6; }
+.mock-bar-a { background-color: var(--highlight); }
+
+.mock-meal-log-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+    padding-bottom: 0.25rem;
+    text-align: left;
+}
+
+.mock-meal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mock-meal-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    text-align: left;
+}
+
+.mock-meal-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.1rem;
+}
+
+.mock-meal-meta {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.mock-meal-cal {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   SECTION HEADER
+   ========================================================================== */
+.section-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 4rem auto;
+}
+
+.section-tag {
+    display: inline-block;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+/* ==========================================================================
+   FEATURES SECTION
+   ========================================================================== */
+.features-section {
+    padding: 5rem 0;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    padding: 2.5rem 2rem;
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: var(--white);
+}
+
+.bg-emerald { background-color: var(--primary); }
+.bg-orange { background-color: var(--highlight); }
+.bg-mint { background-color: var(--accent-green); }
+
+.feature-card p {
+    margin-top: 0.75rem;
+    line-height: 1.6;
+}
+
+/* ==========================================================================
+   CALCULATOR SECTION (PURE CSS SELECTOR ENGINE)
+   ========================================================================== */
+.calculator-section {
+    padding: 5rem 0;
+}
+
+.calculator-card {
+    max-width: 850px;
+    margin: 0 auto;
+    overflow: hidden;
+    padding: 2.5rem;
+}
+
+/* Hide raw radios representing goal active options */
+.calc-tab-radio {
+    display: none;
+}
+
+/* Tab Header Navigation wrapper */
+.calc-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 1.5rem;
+}
+
+.tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: var(--transition-quick);
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.tab-label:hover {
+    background: var(--white);
+    color: var(--text-main);
+}
+
+.calc-container {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 3rem;
+    margin-bottom: 2.5rem;
+}
+
+/* 
+   TAB INDICATOR SELECTION STATES:
+   When a radio button is checked, style its respective label.
+*/
+#calc-loss:checked ~ .calc-tabs .loss-lbl {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--accent-green);
+}
+
+#calc-gain:checked ~ .calc-tabs .gain-lbl {
+    border-color: var(--highlight);
+    background: var(--highlight-light);
+    color: var(--highlight);
+}
+
+#calc-maintain:checked ~ .calc-tabs .maintain-lbl {
+    border-color: var(--accent-green);
+    background: var(--accent-green-light);
+    color: var(--accent-green);
+}
+
+/* Input sliders section layout */
+.calc-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.input-val {
+    color: var(--primary);
+}
+
+/* Custom styled range input track */
+.styled-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(100, 116, 139, 0.15);
+    outline: none;
+}
+
+.styled-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+}
+
+/* 
+   PRESET DISPLAY TOGGLE:
+   Unhide only the panel corresponding to the checked radio button.
+*/
+.result-panel {
+    display: none;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+#calc-loss:checked ~ .calc-container .panel-loss { display: block; }
+#calc-gain:checked ~ .calc-container .panel-gain { display: block; }
+#calc-maintain:checked ~ .calc-container .panel-maintain { display: block; }
+
+.result-number {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-number .num {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.result-number .unit {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.result-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.macro-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.macro-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.macro-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.bar-bg {
+    width: 100%;
+    height: 10px;
+    background: rgba(100, 116, 139, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    /* transition rules enable slide animation on widths when checking different radios */
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.protein-fill { background-color: var(--accent-green); }
+.carb-fill { background-color: var(--primary); }
+.fat-fill { background-color: var(--highlight); }
+
+.calc-footer {
+    border-top: 1px solid var(--glass-border);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.calc-footer p {
+    font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   RECIPE CHOICES SECTION (Scrollable Gallery with CSS Filters)
+   ========================================================================== */
+.recipe-section {
+    padding: 5rem 0;
+}
+
+/* Hide standard radios for filtering */
+.phase-radio-input {
+    display: none;
+}
+
+/* Category phase buttons layout */
+.phase-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 1.5rem;
+}
+
+.phase-tab-btn {
+    padding: 0.65rem 1.5rem;
+    border-radius: 99px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: var(--transition-quick);
+}
+
+.phase-tab-btn:hover {
+    background: var(--white);
+    color: var(--text-main);
+}
+
+/* 
+   Style active filter buttons dynamically based on radio check states:
+*/
+#phase-all:checked ~ .phase-tabs .all-tab {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+#phase-deficit:checked ~ .phase-tabs .deficit-tab {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+#phase-maintain:checked ~ .phase-tabs .maintain-tab {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+#phase-surplus:checked ~ .phase-tabs .surplus-tab {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* 
+   Scrollable Track:
+   Horizontal container with horizontal flex items, snapped alignment,
+   and custom responsive scrollbar overlays.
+*/
+.recipe-scroll-track {
+    display: flex;
+    overflow-x: auto;
+    gap: 2rem;
+    padding: 1rem 0.5rem 2rem 0.5rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Style the horizontal scrollbar for premium feel */
+.recipe-scroll-track::-webkit-scrollbar {
+    height: 8px;
+}
+
+.recipe-scroll-track::-webkit-scrollbar-track {
+    background: rgba(100, 116, 139, 0.05);
+    border-radius: 99px;
+}
+
+.recipe-scroll-track::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 99px;
+}
+
+.recipe-scroll-track::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+}
+
+/* 
+   Recipe Cards:
+   Frosted glassmorphism layout, horizontal snap points.
+*/
+.recipe-card {
+    flex: 0 0 360px;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    padding: 2.25rem 2rem;
+    border-radius: 24px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    transition: var(--transition-smooth);
+    box-shadow: var(--glass-shadow);
+}
+
+.recipe-card:hover {
+    background: var(--glass-bg-hover);
+    transform: translateY(-6px);
+    box-shadow: var(--glass-shadow-hover);
+}
+
+.recipe-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.recipe-badge-tag {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+.card-emoji {
+    font-size: 2rem;
+}
+
+.recipe-card h3 {
+    font-size: 1.35rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+}
+
+.recipe-focus {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.recipe-calories-box {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.recipe-calories-box .cal-val {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.recipe-calories-box .cal-unit {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* 
+   Recipe Macros Split Bar:
+   Combines protein, carbs, and fats segments proportionally into a single bar.
+*/
+.recipe-macros-bar {
+    display: flex;
+    height: 24px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--white);
+    text-align: center;
+    line-height: 24px;
+}
+
+.macro-segment {
+    height: 100%;
+    transition: var(--transition-smooth);
+}
+
+.pro-segment { background-color: var(--accent-green); }
+.carb-segment { background-color: var(--primary); }
+.fat-segment { background-color: var(--highlight); }
+
+/* Details/Instructions section */
+.recipe-details-panel {
+    border-top: 1px dashed rgba(100, 116, 139, 0.15);
+    padding-top: 1.25rem;
+    margin-top: auto;
+}
+
+.details-heading {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.details-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* 
+   GALLERY FILTER ENGINE (Pure CSS sibling filtering):
+   Hides recipe cards based on checked radio button filters.
+*/
+#phase-deficit:checked ~ .recipe-scroll-track .recipe-card:not(.phase-card-deficit) {
+    display: none;
+}
+
+#phase-maintain:checked ~ .recipe-scroll-track .recipe-card:not(.phase-card-maintain) {
+    display: none;
+}
+
+#phase-surplus:checked ~ .recipe-scroll-track .recipe-card:not(.phase-card-surplus) {
+    display: none;
+}
+
+/* ==========================================================================
+   TESTIMONIALS SECTION (PURE CSS MASONRY FILTER)
+   ========================================================================== */
+.testimonials-section {
+    padding: 5rem 0;
+}
+
+.testimonial-filters {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 3.5rem;
+}
+
+.filter-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 99px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: var(--transition-quick);
+}
+
+.filter-btn:hover {
+    background: var(--white);
+    color: var(--text-main);
+}
+
+/* Hide standard filters inputs */
+.filter-radio {
+    display: none;
+}
+
+/* 
+   Style active tags/labels based on root radio states:
+   These target .all-btn, .loss-btn, .gain-btn inside .page-wrapper.
+*/
+#filter-all:checked ~ .page-wrapper .all-btn {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+#filter-loss:checked ~ .page-wrapper .loss-btn {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+#filter-gain:checked ~ .page-wrapper .gain-btn {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* 
+   FILTER LOGIC ENGINE:
+   When Loss is checked, hide cards without .loss.
+   When Gain is checked, hide cards without .gain.
+*/
+#filter-loss:checked ~ .page-wrapper .story-card:not(.loss) {
+    display: none;
+}
+
+#filter-gain:checked ~ .page-wrapper .story-card:not(.gain) {
+    display: none;
+}
+
+.stories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.story-card {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.story-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.story-user h4 {
+    font-size: 1.05rem;
+    margin-bottom: 0.15rem;
+}
+
+.user-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.rating {
+    color: #F59E0B;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+}
+
+.story-text {
+    font-style: italic;
+    color: var(--text-main);
+}
+
+.story-badge {
+    align-self: flex-start;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+/* ==========================================================================
+   PRICING SECTION
+   ========================================================================== */
+.pricing-section {
+    padding: 5rem 0;
+}
+
+/* Hide billing toggle input */
+.pricing-checkbox {
+    display: none;
+}
+
+.pricing-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.toggle-label {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: var(--transition-quick);
+}
+
+.discount-badge {
+    background-color: var(--highlight-light);
+    color: var(--highlight);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 700;
+    margin-left: 0.25rem;
+}
+
+/* Custom visual toggle switch track */
+.pricing-switch-track {
+    width: 48px;
+    height: 24px;
+    border-radius: 99px;
+    background: rgba(100,116,139,0.15);
+    cursor: pointer;
+    position: relative;
+    display: block;
+}
+
+.pricing-switch-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--white);
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: var(--transition-quick);
+}
+
+/* Translate switch thumb and alter active label colors on checked state */
+#pricing-toggle:checked ~ .pricing-toggle-wrapper .pricing-switch-thumb {
+    transform: translateX(24px);
+    background-color: var(--primary);
+}
+
+#pricing-toggle:checked ~ .pricing-toggle-wrapper .label-annual {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+#pricing-toggle:not(:checked) ~ .pricing-toggle-wrapper .label-monthly {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+/* Show/Hide pricing rates based on switch checkbox */
+.price-annual { display: none; }
+.price-monthly { display: block; }
+
+#pricing-toggle:checked ~ .pricing-wrapper .price-annual { display: block; }
+#pricing-toggle:checked ~ .pricing-wrapper .price-monthly { none; display: none; }
+
+/* Pricing Grid Cards */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.pricing-card {
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.plan-desc {
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+.price-block {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.price-block .currency {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    align-self: flex-start;
+}
+
+.price-block .amount {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.price-block .period {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
+.billed-annually {
+    display: block;
+    width: 100%;
+    font-size: 0.8rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.pricing-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 2.5rem;
+    flex-grow: 1;
+}
+
+.pricing-features li {
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+/* Featured card highlight border settings */
+.premium-plan {
+    border-color: var(--primary);
+    background: var(--white);
+    box-shadow: 0 20px 40px rgba(16, 185, 129, 0.08);
+}
+
+.premium-plan:hover {
+    background: var(--white);
+    box-shadow: 0 24px 48px rgba(16, 185, 129, 0.15);
+}
+
+.featured-tag {
+    position: absolute;
+    top: 0;
+    right: 3rem;
+    transform: translateY(-50%);
+    background: var(--highlight);
+    color: var(--white);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+}
+
+/* ==========================================================================
+   CONTACT SECTION
+   ========================================================================== */
+.contact-section {
+    padding: 5rem 0;
+}
+
+.contact-card {
+    padding: 4rem;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.contact-info h2 {
+    margin-bottom: 1rem;
+}
+
+.contact-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+
+.c-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.c-stat strong {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.c-stat span {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.contact-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.contact-form {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.form-group {
+    flex-grow: 1;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.7);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    outline: none;
+    transition: var(--transition-quick);
+}
+
+.form-input:focus {
+    border-color: var(--primary);
+    background: var(--white);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.privacy-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   FOOTER AREA
+   ========================================================================== */
+.footer-area {
+    background: var(--white);
+    border-top: 1px solid var(--glass-border);
+    padding: 5rem 0 2rem 0;
+    margin-top: 5rem;
+}
+
+.footer-container {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 4rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+}
+
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 380px;
+}
+
+.footer-brand p {
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.link-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.link-col h4 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.link-col a {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.link-col a:hover {
+    color: var(--primary);
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   KEYFRAME ANIMATIONS
+   ========================================================================== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (MEDIA QUERIES)
+   ========================================================================== */
+
+/* 
+   MOBILE MENU DRAWER ANIMATIONS:
+   When #nav-toggle checkbox is checked:
+   - Slide mobile drawer into viewport.
+   - Transform hamburger lines into an 'X' icon.
+*/
+#nav-toggle:checked ~ .mobile-drawer {
+    transform: translateX(0);
+}
+
+#nav-toggle:checked ~ .glass-header .nav-toggle-label span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+#nav-toggle:checked ~ .glass-header .nav-toggle-label span:nth-child(2) {
+    opacity: 0;
+}
+
+#nav-toggle:checked ~ .glass-header .nav-toggle-label span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+/* ==========================================================================
+   TEAM SECTION
+   ========================================================================== */
+.team-section {
+    margin-top: 4rem;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.team-card {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: var(--transition-quick);
+}
+
+.team-card:hover {
+    transform: translateY(-5px);
+}
+
+.team-img-wrapper {
+    width: 130px;
+    height: 130px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 3px solid var(--white);
+    box-shadow: var(--shadow-sm);
+    background: var(--glass-bg);
+}
+
+.team-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.team-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--text-main);
+    font-family: var(--font-display);
+}
+
+.team-card .position {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.25rem;
+}
+
+.team-card .bio {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Breakpoint: 1024px (Tablets / Laptops) */
+@media (max-width: 1024px) {
+    h1 { font-size: 2.75rem; }
+    h2 { font-size: 2.15rem; }
+    
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        text-align: center;
+    }
+    
+    .hero-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+    
+    .hero-mockup-wrapper {
+        max-width: 500px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .calc-container {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+    
+    .plate-playground {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        padding: 2rem;
+    }
+    
+    .stories-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+/* Breakpoint: 768px (Mobile phones) */
+@media (max-width: 768px) {
+    html { font-size: 15px; }
+    
+    .container {
+        padding: 0 1.5rem;
+    }
+    
+    .team-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Toggle desktop menu items away and show mobile menu label button */
+    .nav-menu, .nav-cta {
+        display: none;
+    }
+    
+    .nav-toggle-label {
+        display: flex;
+    }
+    
+    .calculator-card {
+        padding: 1.5rem;
+    }
+    
+    .calc-tabs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .tab-label {
+        justify-content: center;
+    }
+    
+    .calc-footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .contact-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .contact-form {
+        flex-direction: column;
+    }
+    
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+    
+    .footer-bottom {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}

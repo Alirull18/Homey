@@ -86,3 +86,41 @@ CREATE TABLE hydration_logs (
 
 -- Insert Default Tags
 INSERT INTO tags (tag_name) VALUES ('High Protein'), ('Low Carb'), ('Vegetarian'), ('Quick'), ('High Fiber');
+
+-- Insert Default Ingredients (35 items)
+INSERT INTO ingredients (name, category, kcal_per_100g, protein_g, carbs_g, fat_g) VALUES
+('Chicken Breast', 'Meat & Poultry', 165, 31, 0, 3.6),
+('Brown Rice', 'Grains', 100, 2.7, 24, 2),
+('Whole Egg', 'Dairy & Eggs', 155, 13, 1.1, 11),
+('Lean Beef', 'Meat & Poultry', 250, 26, 0, 15),
+('Turkey Breast', 'Meat & Poultry', 135, 30, 0, 1),
+('Salmon Fillet', 'Meat & Poultry', 208, 20, 0, 13),
+('Canned Tuna', 'Meat & Poultry', 116, 26, 0, 1),
+('Broccoli', 'Vegetables', 34, 2.8, 7, 0.4),
+('Spinach', 'Vegetables', 23, 2.9, 3.6, 0.4),
+('Carrot', 'Vegetables', 41, 0.9, 10, 0.2),
+('Sweet Potato', 'Vegetables', 86, 1.6, 20, 0.1),
+('Cucumber', 'Vegetables', 15, 0.7, 3.6, 0.1),
+('Tomato', 'Vegetables', 18, 0.9, 3.9, 0.2),
+('White Rice', 'Grains', 130, 2.7, 28, 0.3),
+('Rolled Oats', 'Grains', 389, 16.9, 66, 6.9),
+('Quinoa', 'Grains', 120, 4.4, 21, 1.9),
+('Whole Wheat Bread', 'Grains', 247, 13, 41, 3.4),
+('Greek Yogurt', 'Dairy & Eggs', 59, 10, 3.6, 0.4),
+('Skimmed Milk', 'Dairy & Eggs', 35, 3.4, 5, 0.1),
+('Cottage Cheese', 'Dairy & Eggs', 98, 11, 3.4, 4.3),
+('Cheddar Cheese', 'Dairy & Eggs', 403, 25, 1.3, 33),
+('Lentils', 'Legumes', 116, 9, 20, 0.4),
+('Chickpeas', 'Legumes', 164, 8.9, 27, 2.6),
+('Black Beans', 'Legumes', 132, 8.9, 24, 0.5),
+('Firm Tofu', 'Legumes', 144, 17, 2.8, 8.7),
+('Peanut Butter', 'Other', 588, 25, 20, 50),
+('Almonds', 'Other', 579, 21, 22, 49),
+('Avocado', 'Other', 160, 2, 9, 15),
+('Olive Oil', 'Other', 884, 0, 0, 100),
+('Apple', 'Other', 52, 0.3, 14, 0.2),
+('Banana', 'Other', 89, 1.1, 23, 0.3),
+('Blueberries', 'Other', 57, 0.7, 14, 0.3),
+('Honey', 'Other', 304, 0.3, 82, 0),
+('Chia Seeds', 'Other', 486, 17, 42, 31),
+('Whey Protein Powder', 'Other', 390, 80, 6, 5);

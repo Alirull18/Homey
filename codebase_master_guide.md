@@ -13,7 +13,8 @@ Use this guide to study for your academic presentation, explain your implementat
 3. **Common Connection Hub (`php/db_connect.php`)**
 4. **Navigation & Session Engine (`php/sidebar.php` & `logout.php`)**
 5. **Security & Authentication Core (`signup.php` & `login.php`)**
-6. **Main Dashboard Center (`index.php`)**
+6. **Landing Page (`index.php`)**
+6b. **Main Dashboard Center (`dashboard.php`)**
 7. **Hydration Tracking System (`hydration.php`)**
 8. **Calorie Tracking & Meal System (`calories.php`)**
 9. **Smart Recipe & Ingredients Calculator (`share.php` & `recipes.php`)**
@@ -253,17 +254,31 @@ Authenticates credentials and maps active sessions.
 
 ---
 
-## 6. Main Dashboard Center (`index.php`)
-The primary system command center. It computes real-time calculations from multiple databases to present health statistics instantly.
+## 6. Landing Page (`index.php`)
+The public-facing entry point of the Homey system. It introduces users to the application, displays features, presents leadership experts, and showcases success stories.
 
-### Core Calculations & Dashboard logic:
+### Core Sections & Dynamic Elements:
+1. **Session-Responsive Call-to-Actions:**
+   - The header CTA and Hero buttons change based on user session state:
+     - If logged in, they display "Go to Dashboard" (routing to `dashboard.php`) and "Logout".
+     - If logged out, they display "Get Started" (routing to `signup.php`) and "Sign In".
+2. **Features Grid:** Displays standard application capabilities (Personalized Dashboard, Calorie & Intake Tracker, Hydration Logs, Community Recipes).
+3. **About Us Section:** Details the story of Homey and renders a grid of 4 core leadership members (Dr. Tan Wooi Peng, Yi Chien, Ms. Choong Jia Yee, Lum KL) with modern square styling.
+4. **Success Stories Section:** Contains 4 clean testimonial cards (Siti Aminah, Marcus Lim, Dr. Elena Low, David Kumar) with no profile picture emojis, displaying clean reviews in English.
+
+---
+
+## 6b. Main Dashboard Center (`dashboard.php`)
+The primary authenticated system command center. It computes real-time calculations from multiple database tables to present health and hydration statistics dynamically.
+
+### Core Calculations & Dashboard Logic:
 
 #### 1. Fetch User Goal State
 *   **Query Logic:**
     ```php
     $q_user = "SELECT weight_kg, height_cm, age, gender, activity_level, goal_type FROM users WHERE user_id = $user_id";
     ```
-    *Explanation:* Extracts personal physiological data. If `weight_kg` is empty (value `0` or null), it means the user's profile is brand new and has not yet been configured.
+    *Explanation:* Retrieves physiological metrics. If `weight_kg` is empty or null, the dashboard prompts the user to configure their profile metrics first.
 
 #### 2. Daily Calorie Goal Calculations (TDEE & Mifflin-St Jeor Equation)
 To calculate exact targets dynamically, the script implements the standard Mifflin-St Jeor medical formula:
@@ -290,9 +305,9 @@ if ($user['weight_kg'] > 0) {
 
     // Apply Strategy Adjustments
     if ($user['goal_type'] === 'Deficit') {
-        $targetKcal = $tdee - 400; // Calorie reduction
+        $targetKcal = $tdee - 400; // Calorie deficit (weight loss)
     } elseif ($user['goal_type'] === 'Surplus') {
-        $targetKcal = $tdee + 300; // Calorie surplus
+        $targetKcal = $tdee + 300; // Calorie surplus (muscle gain)
     } else {
         $targetKcal = $tdee;       // Maintenance
     }
@@ -304,12 +319,12 @@ if ($user['weight_kg'] > 0) {
     ```php
     $q_water = "SELECT cups_drank FROM hydration_logs WHERE user_id = $user_id AND log_date = '$today'";
     ```
-    *Explanation:* Multiplies daily cups by `0.25` to output Liters consumed.
+    *Explanation:* Summarizes water logged today and displays daily progress.
 *   **Daily Meal Calorie Summation:**
     ```php
     $q_meals = "SELECT SUM(calories) as total_cal, COUNT(*) as meal_count FROM meal_logs WHERE user_id = $user_id AND log_date = '$today'";
     ```
-    *Explanation:* Calculates active intake. Used to determine remaining calories via subtraction: `$targetKcal - $total_cal`.
+    *Explanation:* Aggregates calorie intake and computes remaining calories dynamically via subtraction: `$targetKcal - $total_cal`.
 
 ---
 
@@ -467,7 +482,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 Provides comprehensive administrative oversight. Access is secured by validating the active role stored in user sessions:
 ```php
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
-    header("Location: index.php");
+    header("Location: dashboard.php");
     exit;
 }
 ```
@@ -486,8 +501,25 @@ The page evaluates this parameter to render the requested control module:
 <?php elseif ($tab === 'ingredients'): ?>
     <!-- TAB 3: Inserts/Deletes items in the central ingredients database -->
 <?php elseif ($tab === 'users'): ?>
-    <!-- TAB 4: Manages registered accounts -->
+    <!-- TAB 4: Manages registered accounts and handles account removal -->
 <?php endif; ?>
+```
+
+### User Account Deletion & SQL Cascade Deletes:
+The Admin Portal allows deletion of user accounts. Clicking "Remove Acc" submits a POST form that triggers the `delete_user` action:
+```php
+if ($action === 'delete_user') {
+    $target_user_id = (int)$_POST['target_user_id'];
+    if ($target_user_id !== $user_id) {
+        $q_del_user = "DELETE FROM users WHERE user_id = $target_user_id";
+        mysqli_query($conn, $q_del_user);
+    }
+}
+```
+#### Cascading Cleanups:
+Because the database schema implements foreign key cascade deletes:
+- Deleting a user automatically removes all corresponding records in `meal_logs`, `recipes`, `recipe_tags`, and `hydration_logs` referencing that `user_id`.
+- This ensures data integrity without requiring multiple queries.
 ```
 
 ---
@@ -545,4 +577,4 @@ When presenting to your lecturer, be prepared for these three standard questions
     *   *Answer:* "The baseline energy is computed using the **Mifflin-St Jeor Equation** for BMR, which is then multiplied by an activity level coefficient (1.2 to 1.725) to calculate TDEE. The system then applies strategic adjustments based on target strategies: subtracting 400 kcal for calorie deficit goals, and adding 300 kcal for surplus goals."
 
 ---
-*Created with care by Antigravity to support your pair-programming development goals.*
+
