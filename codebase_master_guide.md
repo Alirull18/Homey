@@ -263,7 +263,7 @@ The public-facing entry point of the Homey system. It introduces users to the ap
      - If logged in, they display "Go to Dashboard" (routing to `dashboard.php`) and "Logout".
      - If logged out, they display "Get Started" (routing to `signup.php`) and "Sign In".
 2. **Features Grid:** Displays standard application capabilities (Personalized Dashboard, Calorie & Intake Tracker, Hydration Logs, Community Recipes).
-3. **About Us Section:** Details the story of Homey and renders a grid of 4 core leadership members (Dr. Tan Wooi Peng, Yi Chien, Ms. Choong Jia Yee, Lum KL) with modern square styling.
+3. **About Us Section:** Details the story of Homey and renders a grid of 4 core leadership members (Mohamad Suhayl Alwan, Amjad Irfan, Muhammad Azrul, Ammar Syahmi) with modern square styling.
 4. **Success Stories Section:** Contains 4 clean testimonial cards (Siti Aminah, Marcus Lim, Dr. Elena Low, David Kumar) with no profile picture emojis, displaying clean reviews in English.
 
 ---

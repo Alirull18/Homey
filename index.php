@@ -270,38 +270,38 @@ $full_name = $is_logged_in ? $_SESSION['full_name'] : '';
                     <!-- Member 1 -->
                     <div class="glass-card team-card">
                         <div class="team-img-wrapper">
-                            <img src="https://www.homey.com.my/images/Dr-Tan-Wooi-Peng.png" alt="Dr Tan Wooi Peng">
+                            <img src="images/suhayl.png" alt="Mohamad Suhayl Alwan">
                         </div>
-                        <h3>Dr. Tan Wooi Peng</h3>
-                        <span class="position">Founder & CSO</span>
-                        <p class="bio">Medical doctor with over 10 years experience in primary care. Believer of evidence-based lifestyle medicine.</p>
+                        <h3>Mohamad Suhayl Alwan</h3>
+                        <span class="position">Co-Founder & CEO</span>
+                        <p class="bio">Co-Founder and CEO passionate about evidence-based digital health solutions and community wellness development.</p>
                     </div>
                     <!-- Member 2 -->
                     <div class="glass-card team-card">
                         <div class="team-img-wrapper">
-                            <img src="https://www.homey.com.my/images/yichien.jpg" alt="Yi Chien">
+                            <img src="images/amjad.png" alt="Amjad Irfan">
                         </div>
-                        <h3>Yi Chien</h3>
-                        <span class="position">Co-Founder, CEO & Dietitian</span>
-                        <p class="bio">Certified dietitian (UPM, MDA) passionate about evidence-based community nutrition and wellness education.</p>
+                        <h3>Amjad Irfan</h3>
+                        <span class="position">Certified Dietitian</span>
+                        <p class="bio">Certified dietitian specializing in personalized nutrition protocols, dietary tracking, and wellness counseling.</p>
                     </div>
                     <!-- Member 3 -->
                     <div class="glass-card team-card">
                         <div class="team-img-wrapper">
-                            <img src="https://www.homey.com.my/images/Ms%20Choong%20Jia%20Yee.jpg" alt="Choong Jia Yee">
+                            <img src="images/azrul.png" alt="Muhammad Azrul">
                         </div>
-                        <h3>Ms. Choong Jia Yee</h3>
-                        <span class="position">Co-Founder & CTO</span>
-                        <p class="bio">Lead technologist with vast system design experience, focusing on intuitive web accessibility for all age cohorts.</p>
+                        <h3>Muhammad Azrul</h3>
+                        <span class="position">Medical Doctor</span>
+                        <p class="bio">Medical doctor specializing in primary care, lifestyle medicine, and clinical verification of health metrics.</p>
                     </div>
                     <!-- Member 4 -->
                     <div class="glass-card team-card">
                         <div class="team-img-wrapper">
-                            <img src="https://www.homey.com.my/images/photo_2018-11-20_12-44-59.jpg" alt="Lum KL">
+                            <img src="images/ammar.png" alt="Ammar Syahmi">
                         </div>
-                        <h3>Lum KL</h3>
-                        <span class="position">COO</span>
-                        <p class="bio">Experienced F&B operations manager ensuring fresh meals are cooked and delivered on-time to doorsteps.</p>
+                        <h3>Ammar Syahmi</h3>
+                        <span class="position">Lead Technologist</span>
+                        <p class="bio">Lead technologist focusing on intuitive system architecture, interactive web design, and digital accessibility.</p>
                     </div>
                 </div>
             </div>
